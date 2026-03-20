@@ -48,6 +48,7 @@ public class PlayerController : MonoBehaviour
         }
         rb.gravityScale = 0;
         rb.freezeRotation = true;
+        transform.localScale = new Vector3(2f, 2f, 1f);
     }
 
     private void Start()
@@ -163,6 +164,8 @@ public class PlayerController : MonoBehaviour
     public void TakeDamage(int damage)
     {
         if (isInvincible || isBombActive) return;
+
+        Debug.Log($"Player took damage! Lives: {currentLives}");
 
         currentLives -= damage;
 
