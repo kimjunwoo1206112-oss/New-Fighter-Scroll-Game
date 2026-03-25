@@ -1,0 +1,28 @@
+# Unity generated
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Visual Studio
+.vs/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+
+# OS generated
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Other
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+nul
+read_excel.ps1
