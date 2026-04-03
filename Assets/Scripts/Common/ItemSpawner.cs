@@ -103,7 +103,16 @@ public class ItemSpawner : MonoBehaviour
             {
                 itemScript.SetMoveSpeed(moveSpeed);
                 itemScript.SetMoveDirection(moveDirection);
+                itemScript.SetItemType(type);
             }
+            
+            SpriteRenderer sr = item.GetComponentInChildren<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.transform.localScale = new Vector3(0.7f, 0.7f, 1f);
+                sr.sortingOrder = 10;
+            }
+            
             return item;
         }
 
@@ -126,6 +135,7 @@ public class ItemSpawner : MonoBehaviour
         var sprite = new GameObject("Sprite").AddComponent<SpriteRenderer>();
         sprite.transform.SetParent(item.transform);
         sprite.transform.localPosition = Vector3.zero;
+        sprite.transform.localScale = new Vector3(0.7f, 0.7f, 1f);
         
         switch (type)
         {

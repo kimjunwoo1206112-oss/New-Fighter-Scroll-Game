@@ -5,8 +5,10 @@ public class Item : MonoBehaviour
     [SerializeField] private ItemType itemType;
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float screenBoundary = 6f;
+    [SerializeField] private float lifetime = 10f;
 
     private Vector2 moveDirection = Vector2.down;
+    private float lifetimeTimer;
 
     public void SetMoveSpeed(float speed)
     {
@@ -18,14 +20,66 @@ public class Item : MonoBehaviour
         moveDirection = direction;
     }
 
+    public void SetItemType(ItemType type)
+    {
+        itemType = type;
+        SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.transform.localScale = new Vector3(0.1f, 0.1f, 1f);
+            sr.sortingOrder = 10;
+        }
+    }
+
+    private void Awake()
+    {
+        transform.localScale = new Vector3(0.7f, 0.7f, 1f);
+        
+        BoxCollider2D col = GetComponent<BoxCollider2D>();
+        if (col != null)
+        {
+            col.size = new Vector2(3f, 3f);
+        }
+        
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.drawMode = SpriteDrawMode.Sliced;
+            sr.size = new Vector2(1f, 1f);
+        }
+    }
+
     private void Update()
     {
-        transform.Translate(moveDirection * moveSpeed * Time.deltaTime, Space.World);
-
-        if (Mathf.Abs(transform.position.x) > screenBoundary || 
-            Mathf.Abs(transform.position.y) > screenBoundary)
+        lifetimeTimer += Time.deltaTime;
+        if (lifetimeTimer >= lifetime)
         {
             Destroy(gameObject);
+            return;
+        }
+
+        transform.Translate(moveDirection * moveSpeed * Time.deltaTime, Space.World);
+
+        float newX = Mathf.Clamp(transform.position.x, -screenBoundary, screenBoundary);
+        float newY = Mathf.Clamp(transform.position.y, -screenBoundary, screenBoundary);
+        transform.position = new Vector3(newX, newY, transform.position.z);
+
+        if (transform.position.x <= -screenBoundary || transform.position.x >= screenBoundary ||
+            transform.position.y <= -screenBoundary || transform.position.y >= screenBoundary)
+        {
+            ChangeDirection();
+        }
+    }
+
+    private void ChangeDirection()
+    {
+        int dir = Random.Range(0, 4);
+        switch (dir)
+        {
+            case 0: moveDirection = Vector2.up; break;
+            case 1: moveDirection = Vector2.down; break;
+            case 2: moveDirection = Vector2.left; break;
+            case 3: moveDirection = Vector2.right; break;
         }
     }
 

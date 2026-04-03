@@ -112,6 +112,8 @@ MonoBehaviour:
   attackInterval: 2
   attackPatternCount: 3
   bulletSpeed: 5
+  sideOffset: 0.5
+  bulletScale: 3
 --- !u!61 &3172652364608665356
 BoxCollider2D:
   m_ObjectHideFlags: 0

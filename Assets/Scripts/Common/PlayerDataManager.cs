@@ -25,6 +25,7 @@ public class PlayerDataManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            LoadPlayerData();
         }
         else
         {
@@ -32,15 +33,40 @@ public class PlayerDataManager : MonoBehaviour
         }
     }
 
+    public void SavePlayerData()
+    {
+        PlayerPrefs.SetInt("SelectedPlayerId", selectedPlayerId);
+        PlayerPrefs.SetInt("CurrentStage", currentStage);
+        PlayerPrefs.Save();
+        Debug.Log("플레이어 데이터 저장됨");
+    }
+
+    public void LoadPlayerData()
+    {
+        selectedPlayerId = PlayerPrefs.GetInt("SelectedPlayerId", 1);
+        currentStage = PlayerPrefs.GetInt("CurrentStage", 1);
+        Debug.Log($"플레이어 데이터 로드됨: ID {selectedPlayerId}, Stage {currentStage}");
+    }
+
+    public void ClearPlayerData()
+    {
+        PlayerPrefs.DeleteKey("SelectedPlayerId");
+        PlayerPrefs.DeleteKey("CurrentStage");
+        PlayerPrefs.Save();
+        ResetGame();
+    }
+
     public void SelectPlayer(int playerId)
     {
         selectedPlayerId = playerId;
+        SavePlayerData();
         Debug.Log($"플레이어 선택: ID {playerId}");
     }
 
     public void SetStage(int stage)
     {
         currentStage = stage;
+        SavePlayerData();
     }
 
     public void NextStage()

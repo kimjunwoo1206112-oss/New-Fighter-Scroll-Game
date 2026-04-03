@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Boss : MonoBehaviour
 {
@@ -14,6 +13,13 @@ public class Boss : MonoBehaviour
     [SerializeField] private int attackPatternCount = 3;
     [SerializeField] private float bulletSpeed = 3f;
     [SerializeField] private float sideOffset = 0.5f;
+    [SerializeField] private float bulletScale = 2f;
+
+    [Header("Visual Effect")]
+    [SerializeField] private float flashDuration = 0.1f;
+    [SerializeField] private Color flashColor = Color.red;
+    [SerializeField] private Color lowHpColor = Color.yellow;
+    [SerializeField] private float lowHpThreshold = 0.5f;
 
     private int currentHp;
     private int maxHp;
@@ -22,6 +28,10 @@ public class Boss : MonoBehaviour
     private bool isActive = false;
     private int currentStage = 1;
     private const float zigzagInterval = 7f;
+    private float flashTimer;
+    private bool isFlashing;
+    private SpriteRenderer spriteRenderer;
+    private Color originalColor;
 
     public int MaxHp => maxHp;
     public float ZigzagTimer => zigzagTimer;
@@ -31,12 +41,18 @@ public class Boss : MonoBehaviour
 
     private void Start()
     {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            originalColor = spriteRenderer.color;
+        }
+        
         LoadStatsFromCSV();
         ApplyStageDifficulty();
         currentHp = maxHp;
         isActive = true;
-        transform.localScale = new Vector3(2f, 2f, 1f);
-        transform.position = new Vector3(0, 4.5f, 0);
+        transform.localScale = new Vector3(1f, 1f, 1f);
+        transform.position = new Vector3(0, 6f, -5);
     }
 
     private void LoadStatsFromCSV()
@@ -81,6 +97,9 @@ public class Boss : MonoBehaviour
             zigzagTimer = 0;
             AttackPatternZigzag();
         }
+
+        HandleFlashEffect();
+        CheckLowHp();
     }
 
     private float GetCurrentBulletSpeed()
@@ -130,7 +149,9 @@ public class Boss : MonoBehaviour
     {
         if (enemyBulletPrefab != null)
         {
-            GameObject bulletL = Instantiate(enemyBulletPrefab, LeftAttackPos, Quaternion.identity);
+            GameObject bulletL = BulletPool.Instance.GetEnemyBullet();
+            bulletL.transform.position = new Vector3(LeftAttackPos.x, LeftAttackPos.y, 1);
+            bulletL.transform.localScale = Vector3.one * bulletScale;
             Bullet bulletScriptL = bulletL.GetComponent<Bullet>();
             if (bulletScriptL != null)
             {
@@ -139,7 +160,9 @@ public class Boss : MonoBehaviour
                 bulletScriptL.SetSpeed(GetCurrentBulletSpeed());
             }
 
-            GameObject bulletR = Instantiate(enemyBulletPrefab, RightAttackPos, Quaternion.identity);
+            GameObject bulletR = BulletPool.Instance.GetEnemyBullet();
+            bulletR.transform.position = new Vector3(RightAttackPos.x, RightAttackPos.y, 1);
+            bulletR.transform.localScale = Vector3.one * bulletScale;
             Bullet bulletScriptR = bulletR.GetComponent<Bullet>();
             if (bulletScriptR != null)
             {
@@ -156,7 +179,9 @@ public class Boss : MonoBehaviour
         {
             for (int i = 0; i < 3; i++)
             {
-                GameObject bulletL = Instantiate(enemyBulletPrefab, LeftAttackPos, Quaternion.identity);
+                GameObject bulletL = BulletPool.Instance.GetEnemyBullet();
+            bulletL.transform.position = new Vector3(LeftAttackPos.x, LeftAttackPos.y, -5);
+                bulletL.transform.localScale = Vector3.one * bulletScale;
                 Bullet bulletScriptL = bulletL.GetComponent<Bullet>();
                 if (bulletScriptL != null)
                 {
@@ -165,7 +190,9 @@ public class Boss : MonoBehaviour
                     bulletScriptL.SetSpeed(GetCurrentBulletSpeed());
                 }
 
-                GameObject bulletR = Instantiate(enemyBulletPrefab, RightAttackPos, Quaternion.identity);
+                GameObject bulletR = BulletPool.Instance.GetEnemyBullet();
+                bulletR.transform.position = new Vector3(RightAttackPos.x, RightAttackPos.y, 1);
+                bulletR.transform.localScale = Vector3.one * bulletScale;
                 Bullet bulletScriptR = bulletR.GetComponent<Bullet>();
                 if (bulletScriptR != null)
                 {
@@ -181,7 +208,9 @@ public class Boss : MonoBehaviour
     {
         if (enemyBulletPrefab != null)
         {
-            GameObject bullet = Instantiate(enemyBulletPrefab, transform.position, Quaternion.identity);
+            GameObject bullet = BulletPool.Instance.GetEnemyBullet();
+            bullet.transform.position = new Vector3(transform.position.x, transform.position.y, 1);
+            bullet.transform.localScale = Vector3.one * bulletScale;
             Bullet bulletScript = bullet.GetComponent<Bullet>();
             if (bulletScript != null)
             {
@@ -198,7 +227,9 @@ public class Boss : MonoBehaviour
         {
             for (int i = -1; i <= 1; i++)
             {
-                GameObject bullet = Instantiate(enemyBulletPrefab, transform.position, Quaternion.identity);
+                GameObject bullet = BulletPool.Instance.GetEnemyBullet();
+                bullet.transform.position = transform.position;
+                bullet.transform.localScale = Vector3.one * bulletScale;
                 Bullet bulletScript = bullet.GetComponent<Bullet>();
                 if (bulletScript != null)
                 {
@@ -216,7 +247,9 @@ public class Boss : MonoBehaviour
         {
             for (int i = -2; i <= 2; i++)
             {
-                GameObject bullet = Instantiate(enemyBulletPrefab, transform.position, Quaternion.identity);
+                GameObject bullet = BulletPool.Instance.GetEnemyBullet();
+                bullet.transform.position = transform.position;
+                bullet.transform.localScale = Vector3.one * bulletScale;
                 Bullet bulletScript = bullet.GetComponent<Bullet>();
                 if (bulletScript != null)
                 {
@@ -234,7 +267,9 @@ public class Boss : MonoBehaviour
         {
             for (int i = -3; i <= 3; i++)
             {
-                GameObject bullet = Instantiate(enemyBulletPrefab, transform.position, Quaternion.identity);
+                GameObject bullet = BulletPool.Instance.GetEnemyBullet();
+                bullet.transform.position = transform.position;
+                bullet.transform.localScale = Vector3.one * bulletScale;
                 Bullet bulletScript = bullet.GetComponent<Bullet>();
                 if (bulletScript != null)
                 {
@@ -254,7 +289,9 @@ public class Boss : MonoBehaviour
             {
                 float angle = i * 45f;
                 Vector2 dir = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
-                GameObject bullet = Instantiate(enemyBulletPrefab, transform.position, Quaternion.identity);
+                GameObject bullet = BulletPool.Instance.GetEnemyBullet();
+                bullet.transform.position = transform.position;
+                bullet.transform.localScale = Vector3.one * bulletScale;
                 Bullet bulletScript = bullet.GetComponent<Bullet>();
                 if (bulletScript != null)
                 {
@@ -269,10 +306,49 @@ public class Boss : MonoBehaviour
     public void TakeDamage(int damage)
     {
         currentHp -= damage;
+        StartFlash();
 
         if (currentHp <= 0)
         {
             Die();
+        }
+    }
+
+    private void StartFlash()
+    {
+        if (spriteRenderer != null)
+        {
+            isFlashing = true;
+            flashTimer = flashDuration;
+            spriteRenderer.color = flashColor;
+        }
+    }
+
+    private void HandleFlashEffect()
+    {
+        if (isFlashing)
+        {
+            flashTimer -= Time.deltaTime;
+            
+            if (flashTimer <= 0)
+            {
+                isFlashing = false;
+                if (spriteRenderer != null)
+                {
+                    spriteRenderer.color = originalColor;
+                }
+            }
+        }
+    }
+
+    private void CheckLowHp()
+    {
+        if (isFlashing) return;
+
+        if (spriteRenderer != null && currentHp <= maxHp * lowHpThreshold)
+        {
+            float pulse = Mathf.PingPong(Time.time * 5f, 0.5f) + 0.5f;
+            spriteRenderer.color = new Color(lowHpColor.r, lowHpColor.g, lowHpColor.b, pulse);
         }
     }
 
@@ -297,9 +373,11 @@ public class Boss : MonoBehaviour
         for (int i = 0; i < 5; i++)
         {
             float offsetX = (i % 2 == 0) ? 0.5f : -0.5f;
-            Vector3 spawnPos = transform.position + new Vector3(offsetX, -0.5f, 0);
+            Vector3 spawnPos = new Vector3(transform.position.x + offsetX, transform.position.y - 0.5f, 1);
             
-            GameObject bullet = Instantiate(enemyBulletPrefab, spawnPos, Quaternion.identity);
+            GameObject bullet = BulletPool.Instance.GetEnemyBullet();
+            bullet.transform.position = spawnPos;
+            bullet.transform.localScale = Vector3.one * bulletScale;
             Bullet bulletScript = bullet.GetComponent<Bullet>();
             if (bulletScript != null)
             {

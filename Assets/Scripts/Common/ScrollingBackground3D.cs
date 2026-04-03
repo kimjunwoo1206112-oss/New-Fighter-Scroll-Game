@@ -7,10 +7,14 @@ public class ScrollingBackground3D : MonoBehaviour
 
     private Renderer meshRenderer;
     private Vector2 offset;
+    private MaterialPropertyBlock materialPropertyBlock;
+    private static readonly int OffsetID = Shader.PropertyToID("_Offset");
 
     private void Start()
     {
         meshRenderer = GetComponent<Renderer>();
+        materialPropertyBlock = new MaterialPropertyBlock();
+        meshRenderer.sortingOrder = -100;
     }
 
     private void Update()
@@ -19,7 +23,8 @@ public class ScrollingBackground3D : MonoBehaviour
         {
             offset.x += scrollSpeedX * Time.deltaTime;
             offset.y += scrollSpeedY * Time.deltaTime;
-            meshRenderer.material.mainTextureOffset = offset;
+            materialPropertyBlock.SetVector(OffsetID, offset);
+            meshRenderer.SetPropertyBlock(materialPropertyBlock);
         }
     }
 }

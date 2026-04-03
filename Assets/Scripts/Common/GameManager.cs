@@ -55,7 +55,7 @@ public class GameManager : MonoBehaviour
 
         if (playerPrefabs.Length > index && playerPrefabs[index] != null)
         {
-            currentPlayer = Instantiate(playerPrefabs[index], Vector3.zero, Quaternion.identity);
+            currentPlayer = Instantiate(playerPrefabs[index], new Vector3(0, 0, -5), Quaternion.identity);
             Debug.Log($"플레이어 생성: ID {selectedId} (프리팹 {index})");
         }
         else

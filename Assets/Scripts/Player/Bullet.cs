@@ -13,6 +13,7 @@ public class Bullet : MonoBehaviour
     [SerializeField] private BulletOwner owner;
 
     private Vector2 direction = Vector2.up;
+    private bool hasHit;
 
     private void Awake()
     {
@@ -45,40 +46,47 @@ public class Bullet : MonoBehaviour
     public void SetDirection(Vector2 newDirection)
     {
         direction = newDirection;
-        if (direction == Vector2.down)
-        {
-            transform.rotation = Quaternion.Euler(0, 0, 180);
-        }
+        
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
+        transform.rotation = Quaternion.Euler(0, 0, angle);
     }
 
     private void Update()
     {
+        Vector3 oldPos = transform.position;
         transform.Translate(direction * speed * Time.deltaTime, Space.World);
+        Vector3 newPos = transform.position;
+        
+        Debug.Log($"[Bullet Update] Old: {oldPos}, New: {newPos}, Direction: {direction}");
 
-        if (Mathf.Abs(transform.position.y) > 10f || 
-            Mathf.Abs(transform.position.x) > 10f)
+        if (Mathf.Abs(transform.position.y) > 30f || 
+            Mathf.Abs(transform.position.x) > 30f)
         {
-            Destroy(gameObject);
+            ReturnToPool();
         }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (hasHit) return;
+
         if (owner == BulletOwner.Player)
         {
             Enemy enemy = other.GetComponent<Enemy>();
             if (enemy != null)
             {
+                hasHit = true;
                 enemy.TakeDamage(damage);
-                Destroy(gameObject);
+                ReturnToPool();
                 return;
             }
 
             Boss boss = other.GetComponent<Boss>();
             if (boss != null)
             {
+                hasHit = true;
                 boss.TakeDamage(damage);
-                Destroy(gameObject);
+                ReturnToPool();
                 return;
             }
         }
@@ -88,9 +96,36 @@ public class Bullet : MonoBehaviour
             if (player != null)
             {
                 Debug.Log("Player hit by enemy bullet!");
+                hasHit = true;
                 player.TakeDamage(1);
-                Destroy(gameObject);
+                ReturnToPool();
+                return;
             }
+        }
+    }
+
+    public void ResetBullet()
+    {
+        direction = Vector2.up;
+        transform.rotation = Quaternion.identity;
+        hasHit = false;
+        
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.enabled = true;
+        }
+    }
+
+    private void ReturnToPool()
+    {
+        if (owner == BulletOwner.Player)
+        {
+            BulletPool.Instance?.ReturnPlayerBullet(gameObject);
+        }
+        else
+        {
+            BulletPool.Instance?.ReturnEnemyBullet(gameObject);
         }
     }
 }

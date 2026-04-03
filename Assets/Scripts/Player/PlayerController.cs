@@ -5,7 +5,7 @@ public class PlayerController : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float screenBoundaryX = 4.5f;
-    [SerializeField] private float screenBoundaryY = 4f;
+    [SerializeField] private float screenBoundaryY = 8f;
 
     [Header("Attack")]
     [SerializeField] private GameObject bulletPrefab;
@@ -56,6 +56,8 @@ public class PlayerController : MonoBehaviour
         LoadStatsFromCSV();
         currentLives = maxLives;
         currentBombs = maxBombs;
+        
+        UpdateUI();
     }
 
     private void LoadStatsFromCSV()
@@ -66,16 +68,16 @@ public class PlayerController : MonoBehaviour
             
             moveSpeed = GameDataManager.Instance.GetPlayerStatFloat("Speed", moveSpeed);
             screenBoundaryX = 4.5f;
-            screenBoundaryY = 4f;
+            screenBoundaryY = 8f;
             baseFireRate = GameDataManager.Instance.GetPlayerStatFloat("FireRate", baseFireRate);
             baseDamage = GameDataManager.Instance.GetPlayerStatInt("Attack", baseDamage);
             bulletSpeed = 10f;
-            maxLives = GameDataManager.Instance.GetPlayerStatInt("HP", maxLives);
+            maxLives = 3;  // 목숨 3 개 (고정)
             maxBombs = 3;
             invincibilityDuration = 0.5f;
             bombInvincibilityDuration = 3f;
             
-            Debug.Log($"플레이어 ID {playerId} 스탯 로드 완료: HP={maxLives}, Speed={moveSpeed}, Attack={baseDamage}, FireRate={baseFireRate}");
+            Debug.Log($"플레이어 ID {playerId} 스탯 로드 완료: 목숨={maxLives}, Speed={moveSpeed}, Attack={baseDamage}, FireRate={baseFireRate}");
         }
     }
 
@@ -131,26 +133,31 @@ public class PlayerController : MonoBehaviour
         float currentFireRate = baseFireRate / (1 + (fireRateLevel - 1) * 0.3f);
         fireCooldown = currentFireRate;
 
-        Vector3 spawnPosition = transform.position;
-        
-        if (firePoint != null)
-        {
-            spawnPosition = firePoint.position;
-        }
-        else
-        {
-            spawnPosition.y += 0.5f;
-        }
+        // transform.position 사용
+        Vector3 spawnPosition =firePoint.transform.position;
 
-        if (bulletPrefab != null)
+        if (BulletPool.Instance != null)
         {
-            GameObject bullet = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
-            Bullet bulletScript = bullet.GetComponent<Bullet>();
-            if (bulletScript != null)
+            Debug.Log($"[Fire] Player pos: {transform.position}, Spawn pos: {spawnPosition}");
+            
+            GameObject bullet = BulletPool.Instance.GetPlayerBullet();
+            
+            if (bullet != null)
             {
-                bulletScript.SetDamage(baseDamage + attackLevel - 1);
-                bulletScript.SetSpeed(bulletSpeed);
-                bulletScript.SetOwner(BulletOwner.Player);
+                bullet.transform.position = spawnPosition;
+                bullet.transform.rotation = Quaternion.identity;
+                bullet.SetActive(true);
+                
+                Debug.Log($"[Fire] bullet pos: {bullet.transform.position}");
+                
+                Bullet bulletScript = bullet.GetComponent<Bullet>();
+                if (bulletScript != null)
+                {
+                    bulletScript.SetDamage(baseDamage + attackLevel - 1);
+                    bulletScript.SetSpeed(bulletSpeed);
+                    bulletScript.SetOwner(BulletOwner.Player);
+                    bulletScript.SetDirection(Vector2.up);
+                }
             }
         }
     }
@@ -194,11 +201,13 @@ public class PlayerController : MonoBehaviour
         if (currentLives <= 0)
         {
             currentLives = 0;
+            UpdateUI();
             GameOver();
         }
         else
         {
             StartInvincibility(invincibilityDuration);
+            UpdateUI();
         }
     }
 
@@ -217,6 +226,7 @@ public class PlayerController : MonoBehaviour
         invincibilityTimer = bombInvincibilityDuration;
 
         BombEffect();
+        UpdateUI();
     }
 
     private void BombEffect()
@@ -239,6 +249,7 @@ public class PlayerController : MonoBehaviour
         if (currentBombs < maxBombs)
         {
             currentBombs++;
+            UpdateUI();
         }
     }
 
@@ -247,6 +258,7 @@ public class PlayerController : MonoBehaviour
         if (attackLevel < 6)
         {
             attackLevel++;
+            UpdateUI();
         }
     }
 
@@ -255,6 +267,22 @@ public class PlayerController : MonoBehaviour
         if (fireRateLevel < 6)
         {
             fireRateLevel++;
+            UpdateUI();
+        }
+    }
+
+    private void UpdateUI()
+    {
+        Debug.Log($"UpdateUI 호출! 현재 HP: {currentLives}");
+        
+        if (UIManager.Instance != null)
+        {
+            Debug.Log("UIManager.Instance 있음");
+            UIManager.Instance.UpdateHUD();
+        }
+        else
+        {
+            Debug.LogWarning("UIManager.Instance 없음! Canvas 에 UIManager 컴포넌트를 추가하세요.");
         }
     }
 

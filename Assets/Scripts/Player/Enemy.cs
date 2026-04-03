@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class Enemy : MonoBehaviour
 {
@@ -9,21 +10,56 @@ public class Enemy : MonoBehaviour
     [SerializeField] private bool dropItemOnDeath = true;
     [SerializeField] private float itemDropRate = 0.3f;
     [SerializeField] private GameObject enemyBulletPrefab;
-    [SerializeField] private float attackInterval = 3f;
+    [SerializeField] private float attackInterval = 2f;
     [SerializeField] private float bulletSpeed = 3f;
+    [SerializeField] private float bulletScale = 2f;
+    [SerializeField] private GameObject deathParticlePrefab;
+    [SerializeField] private float screenTopY = 5f;
+    [SerializeField] private float screenBottomY = -5f;
+    [SerializeField] private Transform bulletSpawnPoint;
 
     private int hp;
     private int currentStage = 1;
     private float difficultyMultiplier = 1.1f;
     private float attackTimer;
+    private EnemyPool enemyPool;
 
     public int HP => hp;
+    public int EnemyId => enemyId;
+    public bool IsActive => gameObject.activeInHierarchy;
 
     private void Start()
+    {
+        Initialize();
+    }
+
+    public void Initialize()
     {
         LoadStatsFromCSV();
         ApplyDifficulty();
         transform.localScale = new Vector3(2.5f, 2.5f, 1f);
+    }
+
+    public void SetPool(EnemyPool pool)
+    {
+        enemyPool = pool;
+    }
+
+    public void ResetEnemy()
+    {
+        attackTimer = attackInterval;
+        Initialize();
+        
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.enabled = true;
+        }
+    }
+
+    public void SetPosition(Vector3 newPosition)
+    {
+        transform.position = newPosition;
     }
 
     private void LoadStatsFromCSV()
@@ -75,6 +111,18 @@ public class Enemy : MonoBehaviour
     private void Die()
     {
         GameManager.Instance?.AddScore(scoreValue);
+        
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateHUD();
+        }
+        
+        if (deathParticlePrefab != null)
+        {
+            GameObject effect = Instantiate(deathParticlePrefab, transform.position, Quaternion.identity);
+            Destroy(effect, 2f);
+        }
+        
         EnemySpawner.Instance?.OnEnemyDestroyed();
 
         if (dropItemOnDeath && Random.value < itemDropRate)
@@ -82,7 +130,24 @@ public class Enemy : MonoBehaviour
             SpawnItem();
         }
 
-        Destroy(gameObject);
+        ReturnToPool();
+    }
+
+    private void ReturnToPool()
+    {
+        if (enemyPool != null)
+        {
+            enemyPool.ReturnEnemy(gameObject, enemyId);
+        }
+        else
+        {
+            gameObject.SetActive(false);
+        }
+    }
+
+    public void ForceReturnToPool()
+    {
+        ReturnToPool();
     }
 
     private void SpawnItem()
@@ -100,7 +165,7 @@ public class Enemy : MonoBehaviour
         transform.Translate(Vector2.down * moveSpeed * speedMultiplier * Time.deltaTime);
 
         attackTimer += Time.deltaTime;
-        if (attackTimer >= attackInterval)
+        if (attackTimer >= attackInterval && IsInScreen())
         {
             attackTimer = 0;
             Attack();
@@ -109,21 +174,45 @@ public class Enemy : MonoBehaviour
         if (transform.position.y < -7f)
         {
             EnemySpawner.Instance?.OnEnemyDestroyed();
-            Destroy(gameObject);
+            ReturnToPool();
         }
+    }
+
+    private bool IsInScreen()
+    {
+        return transform.position.y >= screenBottomY && transform.position.y <= screenTopY;
+    }
+
+    private Vector3 GetBulletSpawnPosition()
+    {
+        if (bulletSpawnPoint != null)
+        {
+            return bulletSpawnPoint.position;
+        }
+        
+        float spawnZ = transform.position.z;
+        return new Vector3(transform.position.x, transform.position.y, spawnZ);
     }
 
     private void Attack()
     {
-        if (enemyBulletPrefab != null)
+        if (enemyBulletPrefab != null && BulletPool.Instance != null)
         {
-            GameObject bullet = Instantiate(enemyBulletPrefab, transform.position, Quaternion.identity);
-            Bullet bulletScript = bullet.GetComponent<Bullet>();
-            if (bulletScript != null)
+            GameObject bullet = BulletPool.Instance.GetEnemyBullet();
+            
+            if (bullet != null)
             {
-                bulletScript.SetOwner(BulletOwner.Enemy);
-                bulletScript.SetDirection(Vector2.down);
-                bulletScript.SetSpeed(bulletSpeed);
+                bullet.transform.position = GetBulletSpawnPosition();
+                bullet.transform.localScale = Vector3.one * bulletScale;
+                bullet.SetActive(true);
+                
+                Bullet bulletScript = bullet.GetComponent<Bullet>();
+                if (bulletScript != null)
+                {
+                    bulletScript.SetOwner(BulletOwner.Enemy);
+                    bulletScript.SetDirection(Vector2.down);
+                    bulletScript.SetSpeed(bulletSpeed);
+                }
             }
         }
     }
