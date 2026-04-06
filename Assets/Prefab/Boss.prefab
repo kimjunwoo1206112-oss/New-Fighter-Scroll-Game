@@ -114,6 +114,11 @@ MonoBehaviour:
   bulletSpeed: 5
   sideOffset: 0.5
   bulletScale: 3
+  flashDuration: 0.1
+  flashColor: {r: 1, g: 0, b: 0, a: 1}
+  lowHpColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  lowHpThreshold: 0.5
+  explosionEffectPrefab: {fileID: 1722714918501214, guid: 921293cd6a372144a86706254bb7e483, type: 3}
 --- !u!61 &3172652364608665356
 BoxCollider2D:
   m_ObjectHideFlags: 0

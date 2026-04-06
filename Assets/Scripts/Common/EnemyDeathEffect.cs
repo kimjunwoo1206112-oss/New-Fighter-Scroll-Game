@@ -92,4 +92,13 @@ public class EnemyDeathEffect : MonoBehaviour
         EnemyDeathEffect effect = effectObj.AddComponent<EnemyDeathEffect>();
         effect.deathParticle = ps;
     }
+
+    public static void SpawnExplosionEffect(Vector3 position, Sprite[] explosionSprites)
+    {
+        GameObject effectObj = new GameObject("ExplosionEffect");
+        effectObj.transform.position = position;
+        
+        ExplosionEffect effect = effectObj.AddComponent<ExplosionEffect>();
+        effect.SetSprites(explosionSprites);
+    }
 }

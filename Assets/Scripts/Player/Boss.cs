@@ -20,6 +20,7 @@ public class Boss : MonoBehaviour
     [SerializeField] private Color flashColor = Color.red;
     [SerializeField] private Color lowHpColor = Color.yellow;
     [SerializeField] private float lowHpThreshold = 0.5f;
+    [SerializeField] private GameObject explosionEffectPrefab;
 
     private int currentHp;
     private int maxHp;
@@ -52,7 +53,7 @@ public class Boss : MonoBehaviour
         currentHp = maxHp;
         isActive = true;
         transform.localScale = new Vector3(1f, 1f, 1f);
-        transform.position = new Vector3(0, 6f, -5);
+        transform.position = new Vector3(0, 7f, -5);
     }
 
     private void LoadStatsFromCSV()
@@ -356,6 +357,14 @@ public class Boss : MonoBehaviour
     {
         GameManager.Instance?.AddScore(scoreValue);
         GameManager.Instance?.NextStage();
+        
+        if (explosionEffectPrefab != null)
+        {
+            GameObject effect = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+            effect.transform.localScale = Vector3.one * 2f;
+            Destroy(effect, 1f);
+        }
+        
         Destroy(gameObject);
     }
 

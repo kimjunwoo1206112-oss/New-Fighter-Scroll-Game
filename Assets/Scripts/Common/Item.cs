@@ -6,6 +6,7 @@ public class Item : MonoBehaviour
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float screenBoundary = 6f;
     [SerializeField] private float lifetime = 10f;
+    [SerializeField] private float collectionDistance = 1.5f;
 
     private Vector2 moveDirection = Vector2.down;
     private float lifetimeTimer;
@@ -38,7 +39,8 @@ public class Item : MonoBehaviour
         BoxCollider2D col = GetComponent<BoxCollider2D>();
         if (col != null)
         {
-            col.size = new Vector2(3f, 3f);
+            col.size = new Vector2(0.5f, 0.5f);
+            col.isTrigger = true;
         }
         
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
@@ -69,6 +71,8 @@ public class Item : MonoBehaviour
         {
             ChangeDirection();
         }
+
+        CheckPlayerProximity();
     }
 
     private void ChangeDirection()
@@ -86,7 +90,25 @@ public class Item : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         PlayerController player = other.GetComponent<PlayerController>();
+        if (player == null)
+        {
+            player = other.GetComponentInParent<PlayerController>();
+        }
+        
         if (player != null)
+        {
+            ApplyEffect(player);
+            Destroy(gameObject);
+        }
+    }
+
+    private void CheckPlayerProximity()
+    {
+        PlayerController player = FindObjectOfType<PlayerController>();
+        if (player == null) return;
+        
+        float distance = Vector2.Distance(transform.position, player.transform.position);
+        if (distance < collectionDistance)
         {
             ApplyEffect(player);
             Destroy(gameObject);

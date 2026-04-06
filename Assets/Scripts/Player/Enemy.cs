@@ -13,7 +13,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float attackInterval = 2f;
     [SerializeField] private float bulletSpeed = 3f;
     [SerializeField] private float bulletScale = 2f;
-    [SerializeField] private GameObject deathParticlePrefab;
+    [SerializeField] private GameObject explosionEffectPrefab;
     [SerializeField] private float screenTopY = 5f;
     [SerializeField] private float screenBottomY = -5f;
     [SerializeField] private Transform bulletSpawnPoint;
@@ -117,10 +117,11 @@ public class Enemy : MonoBehaviour
             UIManager.Instance.UpdateHUD();
         }
         
-        if (deathParticlePrefab != null)
+        if (explosionEffectPrefab != null)
         {
-            GameObject effect = Instantiate(deathParticlePrefab, transform.position, Quaternion.identity);
-            Destroy(effect, 2f);
+            GameObject effect = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+            effect.transform.localScale = Vector3.one * 0.35f;
+            Destroy(effect, 1f);
         }
         
         EnemySpawner.Instance?.OnEnemyDestroyed();

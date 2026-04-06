@@ -116,7 +116,7 @@ MonoBehaviour:
   attackInterval: 3
   bulletSpeed: 3
   bulletScale: 3
-  deathParticlePrefab: {fileID: 100000, guid: 8a9c4d5e6f7b8c9d0e1f2a3b4c5d6e7f, type: 3}
+  explosionEffectPrefab: {fileID: 1722714918501214, guid: 921293cd6a372144a86706254bb7e483, type: 3}
   screenTopY: 5
   screenBottomY: -5
   bulletSpawnPoint: {fileID: 4889883619191116083}
